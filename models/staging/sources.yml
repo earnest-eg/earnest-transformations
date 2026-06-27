@@ -1,0 +1,417 @@
+version: 2
+
+sources:
+  - name: raw_data
+    schema: PUBLIC
+    tables:
+      - name: STG_ALL_SELLERS_PRODUCTS
+        description: "Transformed e-commerce product data from multiple online sellers."
+        loaded_at_field: DATE
+        config:
+          freshness:
+            warn_after: { count: 3, period: day }
+            error_after: { count: 7, period: day }
+
+        columns:
+          - name: PRODUCT_NAME
+            description: "Full display name of the product"
+            tests:
+              - not_null
+              - not_empty_string
+
+          - name: PRODUCT_URL
+            description: "Canonical URL of the product page"
+            tests:
+              - not_null
+              - not_empty_string
+
+          - name: PRODUCT_IMAGE_URL
+            description: "Image URL or 'missing_url' placeholder"
+            tests:
+              - not_null
+
+          - name: PRODUCT_CATEGORY
+            description: "Top-level product category"
+
+          - name: PRODUCT_SUBCATEGORY
+            description: "Product sub-category"
+
+          - name: PRODUCT_BRAND
+            description: "Product brand name"
+
+          - name: PRODUCT_CURRENT_PRICE
+            description: "Current listed price (EGP)"
+            tests:
+              - not_null
+              - positive_value
+
+          - name: PRODUCT_OLD_PRICE
+            description: "Original / pre-discount price (EGP)"
+            tests:
+              - not_null
+
+          - name: PRODUCT_DISCOUNT_AMOUNT
+            description: "Absolute discount in EGP"
+            tests:
+              - not_null
+              - positive_value
+
+          - name: PRODUCT_DISCOUNT_PERCENTAGE
+            description: "Discount as percentage 0-100"
+            tests:
+              - not_null
+              - positive_value
+              - accepted_range:
+                  min_value: 0
+                  max_value: 100
+
+          - name: PRODUCT_HAS_DISCOUNT
+            description: "1 = discounted, 0 = full price"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: PRODUCT_AVAILABILITY
+            description: "1 = in stock, 0 = out of stock"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: PRODUCT_WEIGHT
+            description: "Product weight in its measuring unit"
+            tests:
+              - not_null
+              - positive_value
+
+          - name: PRODUCT_MEASURING_UNIT
+            description: "Unit of measure (L, Ml, G, Gm, Kg, Piece)"
+
+          - name: PRODUCT_COUNT
+            description: "Product item count"
+            tests:
+              - not_null
+              - positive_value
+
+          - name: PRODUCT_HAS_IMAGE_URL
+            description: "1 = has real image, 0 = missing"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: PRODUCT_HAS_RAM
+            description: "1 = RAM specified, 0 = unknown"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: PRODUCT_HAS_STORAGE
+            description: "1 = storage specified, 0 = unknown"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: PRODUCT_SELLER
+            description: "Seller/platform name"
+            tests:
+              - not_null
+              - not_empty_string
+
+          - name: PRODUCT_IS_TALABAT_SELLER
+            description: "Flag if seller is on Talabat platform"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: TIMESTAMP_TIMEZONE
+            description: "Timezone of the scraping event"
+            tests:
+              - not_null
+
+          - name: DATE_ID
+            description: "Surrogate date key YYYYMMDD"
+            tests:
+              - not_null
+
+          - name: DATE
+            description: "Calendar date"
+            tests:
+              - not_null
+
+          - name: DAY
+            description: "Day of month 1-31"
+            tests:
+              - not_null
+              - accepted_range:
+                  min_value: 1
+                  max_value: 31
+
+          - name: YEAR
+            description: "4-digit year"
+            tests:
+              - not_null
+              - accepted_range:
+                  min_value: 2026
+                  max_value: "{{ modules.datetime.datetime.now().year + 1 }}"
+
+          - name: MONTH
+            description: "Month number 1-12"
+            tests:
+              - not_null
+              - accepted_range:
+                  min_value: 1
+                  max_value: 12
+
+          - name: QUARTER
+            description: "Quarter 1-4"
+            tests:
+              - not_null
+              - accepted_range:
+                  min_value: 1
+                  max_value: 4
+
+          - name: MONTH_NAME
+            description: "Full month name"
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ['January', 'February', 'March', 'April', 'May', 'June',
+                           'July', 'August', 'September', 'October', 'November', 'December']
+
+          - name: DAY_NAME
+            description: "Full day-of-week name"
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+          - name: DAY_OF_WEEK
+            description: "Day of week 0 (Mon) to 6 (Sun)"
+            tests:
+              - not_null
+              - accepted_range:
+                  min_value: 0
+                  max_value: 6
+
+          - name: DAY_OF_YEAR
+            description: "Day of year 1-366"
+            tests:
+              - not_null
+              - accepted_range:
+                  min_value: 1
+                  max_value: 366
+
+          - name: WEEK_OF_YEAR
+            description: "ISO week number 1-53"
+            tests:
+              - not_null
+              - accepted_range:
+                  min_value: 1
+                  max_value: 53
+
+          - name: IS_WEEKEND
+            description: "TRUE/FALSE weekend flag"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: IS_HOLYDAY
+            description: "0/1 holiday flag"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: IS_WORKDAY
+            description: "TRUE/FALSE workday flag"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: IS_LEAP_YEAR
+            description: "TRUE/FALSE leap year flag"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: IS_MONTH_START
+            description: "TRUE/FALSE first day of month"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: IS_MONTH_END
+            description: "TRUE/FALSE last day of month"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: IS_QUARTER_START
+            description: "TRUE/FALSE first day of quarter"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: IS_QUARTER_END
+            description: "TRUE/FALSE last day of quarter"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: IS_YEAR_START
+            description: "TRUE/FALSE first day of year"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: IS_YEAR_END
+            description: "TRUE/FALSE last day of year"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: IS_WEEK_START
+            description: "TRUE/FALSE first day of ISO week"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: IS_WEEK_END
+            description: "TRUE/FALSE last day of ISO week"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: SEASON
+            description: "Season name"
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ['Winter', 'Spring', 'Summer', 'Autumn']
+
+          - name: IS_WINTER
+            description: "TRUE/FALSE winter flag"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: IS_SPRING
+            description: "TRUE/FALSE spring flag"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: IS_SUMMER
+            description: "TRUE/FALSE summer flag"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: IS_AUTUMN
+            description: "TRUE/FALSE autumn flag"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: TIME_ID
+            description: "Surrogate time key HHMMSS"
+            tests:
+              - not_null
+
+          - name: HOUR_24
+            description: "Hour in 24h format 0-23"
+            tests:
+              - not_null
+              - accepted_range:
+                  min_value: 0
+                  max_value: 23
+
+          - name: HOUR_12
+            description: "Hour in 12h format 1-12"
+            tests:
+              - not_null
+              - accepted_range:
+                  min_value: 0
+                  max_value: 12
+
+          - name: MINUTE
+            description: "Minute 0-59"
+            tests:
+              - not_null
+              - accepted_range:
+                  min_value: 0
+                  max_value: 59
+
+          - name: SECOND
+            description: "Second 0-59"
+            tests:
+              - not_null
+              - accepted_range:
+                  min_value: 0
+                  max_value: 59
+
+          - name: MERIDIEM
+            description: "AM or PM"
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ['AM', 'PM']
+
+          - name: IS_AM
+            description: "TRUE/FALSE AM flag"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: IS_PM
+            description: "TRUE/FALSE PM flag"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: PART_OF_DAY
+            description: "Time-of-day bucket"
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ['morning', 'afternoon', 'evening', 'night']
+
+          - name: IS_MORNING
+            description: "TRUE/FALSE morning flag"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: IS_AFTERNOON
+            description: "TRUE/FALSE afternoon flag"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: IS_EVENING
+            description: "TRUE/FALSE evening flag"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: IS_NIGHT
+            description: "TRUE/FALSE night flag"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: IS_NOON
+            description: "TRUE/FALSE noon flag"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: IS_MIDNIGHT
+            description: "TRUE/FALSE midnight flag"
+            tests:
+              - not_null
+              - boolean_values
+
+          - name: IS_MIDDAY
+            description: "TRUE/FALSE midday flag"
+            tests:
+              - not_null
+              - boolean_values

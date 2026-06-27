@@ -1,0 +1,476 @@
+version: 2
+
+models:
+  - name: dim_date
+    description: >
+      Date dimension table providing calendar attributes for each unique
+      scraping date.
+    columns:
+      - name: date_id
+        description: "Surrogate date key (YYYYMMDD integer)"
+        tests:
+          - unique
+          - not_null
+
+      - name: date
+        description: "Calendar date (DATE type)"
+        tests:
+          - not_null
+          - unique
+
+      - name: day
+        description: "Day of month"
+        tests:
+          - not_null
+          - accepted_range:
+              min_value: 1
+              max_value: 31
+
+      - name: year
+        description: "4-digit year"
+        tests:
+          - not_null
+          - accepted_range:
+              min_value: 2024
+              max_value: 2030
+
+      - name: month
+        description: "Month number 1-12"
+        tests:
+          - not_null
+          - accepted_range:
+              min_value: 1
+              max_value: 12
+
+      - name: quarter
+        description: "Quarter number 1-4"
+        tests:
+          - not_null
+          - accepted_range:
+              min_value: 1
+              max_value: 4
+
+      - name: month_name
+        description: "Full English month name"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['January', 'February', 'March', 'April', 'May', 'June',
+                       'July', 'August', 'September', 'October', 'November', 'December']
+
+      - name: day_name
+        description: "Full English day-of-week name"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+      - name: day_of_week
+        tests:
+          - not_null
+          - accepted_range:
+              min_value: 0
+              max_value: 6
+
+      - name: day_of_year
+        tests:
+          - not_null
+          - accepted_range:
+              min_value: 1
+              max_value: 366
+
+      - name: week_of_year
+        tests:
+          - not_null
+          - accepted_range:
+              min_value: 1
+              max_value: 53
+
+      - name: is_weekend
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: is_holyday
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: is_workday
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: is_leap_year
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: is_month_start
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: is_month_end
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: is_quarter_start
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: is_quarter_end
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: is_year_start
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: is_year_end
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: is_week_start
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: is_week_end
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: season
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Winter', 'Spring', 'Summer', 'Autumn']
+
+      - name: is_winter
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: is_spring
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: is_summer
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: is_autumn
+        tests:
+          - not_null
+          - boolean_values
+
+  - name: dim_product
+    description: >
+      Product dimension: one row per unique product URL, keeping the most
+      recent attribute snapshot via QUALIFY windowing.
+    columns:
+      - name: product_sk
+        description: "MD5 surrogate key derived from product_url"
+        tests:
+          - unique
+          - not_null
+          - not_empty_string
+
+      - name: product_name
+        description: "Full display name"
+        tests:
+          - not_null
+          - not_empty_string
+
+      - name: product_brand
+        description: "Product brand"
+
+      - name: product_category
+        description: "Top-level category"
+
+      - name: product_subcategory
+        description: "Sub-category"
+
+      - name: product_url
+        description: "Canonical product page URL"
+        tests:
+          - not_null
+          - unique
+          - not_empty_string
+
+      - name: product_has_image_url
+        description: "1 = has real image, 0 = missing"
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: product_image_url
+        description: "Product image URL or 'missing_url'"
+        tests:
+          - not_null
+
+      - name: product_has_ram
+        description: "1 = RAM attribute available"
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: product_has_storage
+        description: "1 = storage attribute available"
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: product_ram
+        description: "RAM specification string"
+        tests:
+          - not_null
+
+      - name: product_storage
+        description: "Storage specification string"
+        tests:
+          - not_null
+
+  - name: dim_seller
+    description: >
+      Seller dimension: one row per unique seller/platform.
+    columns:
+      - name: seller_sk
+        description: "MD5 surrogate key from product_seller"
+        tests:
+          - unique
+          - not_null
+
+      - name: product_seller
+        description: "Seller / platform name"
+        tests:
+          - not_null
+          - unique
+          - not_empty_string
+
+      - name: product_is_talabat_seller
+        description: "Boolean flag for Talabat platform"
+        tests:
+          - not_null
+          - boolean_values
+
+  - name: dim_time
+    description: >
+      Time dimension: one row per unique time-of-day the scraper ran.
+    columns:
+      - name: time_id
+        description: "Surrogate time key (HHMMSS integer)"
+        tests:
+          - unique
+          - not_null
+
+      - name: time_12
+        description: "12-hour time string"
+        tests:
+          - not_null
+
+      - name: time_24
+        description: "24-hour time string"
+        tests:
+          - not_null
+
+      - name: hour_12
+        description: "Hour in 12h clock"
+        tests:
+          - not_null
+          - accepted_range:
+              min_value: 0
+              max_value: 12
+
+      - name: hour_24
+        description: "Hour in 24h clock"
+        tests:
+          - not_null
+          - accepted_range:
+              min_value: 0
+              max_value: 23
+
+      - name: minute
+        description: "Minute 0-59"
+        tests:
+          - not_null
+          - accepted_range:
+              min_value: 0
+              max_value: 59
+
+      - name: second
+        description: "Second 0-59"
+        tests:
+          - not_null
+          - accepted_range:
+              min_value: 0
+              max_value: 59
+
+      - name: meridiem
+        description: "AM or PM"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['AM', 'PM']
+
+      - name: is_am
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: is_pm
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: TIMESTAMP_TIMEZONE
+        description: "Timezone of scraping event"
+        tests:
+          - not_null
+
+      - name: part_of_day
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['morning', 'afternoon', 'evening', 'night']
+
+      - name: is_morning
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: is_afternoon
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: is_evening
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: is_night
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: is_noon
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: is_midnight
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: is_midday
+        tests:
+          - not_null
+          - boolean_values
+
+  - name: fact_product
+    description: >
+      Fact table recording each scraped product pricing event.
+      Grain: one row per (product_url, date_id, time_id).
+    columns:
+      - name: fact_id
+        description: "MD5 composite surrogate key"
+        tests:
+          - unique
+          - not_null
+
+      - name: product_sk
+        description: "FK → dim_product"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_product')
+              field: product_sk
+
+      - name: seller_sk
+        description: "FK → dim_seller"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_seller')
+              field: seller_sk
+
+      - name: date_id
+        description: "FK → dim_date"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_id
+
+      - name: time_id
+        description: "FK → dim_time"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_time')
+              field: time_id
+
+      - name: product_current_price
+        description: "Current listed price (EGP)"
+        tests:
+          - not_null
+          - positive_value
+
+      - name: product_old_price
+        description: "Original price before discount (EGP)"
+        tests:
+          - not_null
+
+      - name: product_discount_amount
+        description: "Absolute discount amount (EGP)"
+        tests:
+          - not_null
+          - positive_value
+
+      - name: product_discount_percentage
+        description: "Discount as a percentage 0-100"
+        tests:
+          - not_null
+          - positive_value
+          - accepted_range:
+              min_value: 0
+              max_value: 100
+
+      - name: product_has_discount
+        description: "1 = discounted, 0 = full price"
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: product_availability
+        description: "1 = in stock, 0 = out of stock"
+        tests:
+          - not_null
+          - boolean_values
+
+      - name: product_count
+        description: "Item count in the listing"
+        tests:
+          - not_null
+          - positive_value
+
+      - name: product_weight
+        description: "Product weight"
+        tests:
+          - not_null
+          - positive_value
+
+      - name: product_measuring_unit
+        description: "Unit of measure"
+        tests:
+          - not_null
