@@ -1,0 +1,142 @@
+version: 2
+
+semantic_models:
+  - name: sm_fact_product
+    description: Semantic model representing the fact table for product pricing events.
+    model: ref('fact_product')
+    defaults:
+      agg_time_dimension: date_day
+    entities:
+      - name: fact_id
+        type: primary
+        description: Primary key for the product fact table.
+      - name: product_sk
+        type: foreign
+        description: Foreign key to the product dimension.
+      - name: seller_sk
+        type: foreign
+        description: Foreign key to the seller dimension.
+      - name: date_id
+        type: foreign
+        description: Foreign key to the date dimension.
+      - name: time_id
+        type: foreign
+        description: Foreign key to the time dimension.
+    dimensions:
+      - name: date_day
+        type: time
+        expr: CAST(CAST(date_id AS VARCHAR) AS DATE) 
+        type_params:
+          time_granularity: day
+      - name: product_availability
+        type: categorical
+        description: Indicates whether the product is currently in stock.
+      - name: product_has_discount
+        type: categorical
+        description: Indicates whether the product currently has a discount applied.
+    measures:
+      - name: average_current_price
+        description: The average current listed price of products.
+        expr: product_current_price
+        agg: average
+      - name: max_current_price
+        description: The maximum current listed price of products.
+        expr: product_current_price
+        agg: max
+      - name: min_current_price
+        description: The minimum current listed price of products.
+        expr: product_current_price
+        agg: min
+      - name: total_discount_amount
+        description: The sum of all discount amounts applied to products.
+        expr: product_discount_amount
+        agg: sum
+      - name: average_discount_percentage
+        description: The average discount percentage across all discounted products.
+        expr: product_discount_percentage
+        agg: average
+      - name: total_product_count
+        description: The total count of products recorded in the scraping events.
+        expr: product_count
+        agg: sum
+
+  - name: sm_dim_product
+    description: Semantic model representing the product dimension.
+    model: ref('dim_product')
+    entities:
+      - name: product_sk
+        type: primary
+        description: Primary key for the product dimension.
+    dimensions:
+      - name: product_brand
+        type: categorical
+        description: The brand of the product.
+      - name: product_category
+        type: categorical
+        description: The top-level category of the product.
+      - name: product_subcategory
+        type: categorical
+        description: The subcategory of the product.
+      - name: product_has_image_url
+        type: categorical
+        description: Indicates if the product has a valid image URL.
+      - name: product_has_ram
+        type: categorical
+        description: Indicates if RAM specifications are available for the product.
+      - name: product_has_storage
+        type: categorical
+        description: Indicates if storage specifications are available for the product.
+
+  - name: sm_dim_seller
+    description: Semantic model representing the seller dimension.
+    model: ref('dim_seller')
+    entities:
+      - name: seller_sk
+        type: primary
+        description: Primary key for the seller dimension.
+    dimensions:
+      - name: product_seller
+        type: categorical
+        description: The name of the seller or platform.
+      - name: product_is_talabat_seller
+        type: categorical
+        description: Indicates if the seller operates on the Talabat platform.
+
+  - name: sm_dim_date
+    description: Semantic model representing the date dimension.
+    model: ref('dim_date')
+    entities:
+      - name: date_id
+        type: primary
+        description: Primary key for the date dimension.
+    dimensions:
+      - name: day_name
+        type: categorical
+        description: The full English name of the day of the week.
+      - name: month_name
+        type: categorical
+        description: The full English name of the month.
+      - name: is_weekend
+        type: categorical
+        description: Indicates if the date falls on a weekend.
+      - name: is_holyday
+        type: categorical
+        description: Indicates if the date is a holiday.
+      - name: season
+        type: categorical
+        description: The season corresponding to the date.
+
+  - name: sm_dim_time
+    description: Semantic model representing the time dimension.
+    model: ref('dim_time')
+    entities:
+      - name: time_id
+        type: primary
+        description: Primary key for the time dimension.
+    dimensions:
+      - name: part_of_day
+        type: categorical
+        description: The broad part of the day (e.g., morning, afternoon).
+      - name: meridiem
+        type: categorical
+        description: The meridiem indicator (AM or PM).
