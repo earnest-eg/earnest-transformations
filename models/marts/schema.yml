@@ -474,3 +474,125 @@ models:
         description: "Unit of measure"
         tests:
           - not_null
+semantic_models:
+  - name: product_pricing
+    description: "Each row is one price observation per product per scrape event"
+    model: ref('fact_product')
+    entities:
+      - name: fact
+        type: primary
+        expr: fact_id
+      - name: product
+        type: foreign
+        expr: product_sk
+      - name: seller
+        type: foreign
+        expr: seller_sk
+    dimensions:
+      - name: has_discount
+        type: categorical
+        expr: product_has_discount
+      - name: availability
+        type: categorical
+        expr: product_availability
+      - name: measuring_unit
+        type: categorical
+        expr: product_measuring_unit
+      - name: scrape_date
+        type: time
+        type_params:
+          time_granularity: day
+        expr: date_id
+    measures:
+      - name: total_listings
+        agg: count
+        expr: fact_id
+        agg_time_dimension: scrape_date
+      - name: avg_current_price
+        agg: average
+        expr: product_current_price
+        agg_time_dimension: scrape_date
+      - name: avg_discount_percentage
+        agg: average
+        expr: product_discount_percentage
+        agg_time_dimension: scrape_date
+      - name: in_stock_count
+        agg: sum
+        expr: product_availability
+        agg_time_dimension: scrape_date
+      - name: discounted_count
+        agg: sum
+        expr: product_has_discount
+        agg_time_dimension: scrape_date
+  - name: products
+    description: "One row per unique product"
+    model: ref('dim_product')
+    entities:
+      - name: product
+        type: primary
+        expr: product_sk
+    dimensions:
+      - name: product_name
+        type: categorical
+      - name: product_category
+        type: categorical
+      - name: product_subcategory
+        type: categorical
+      - name: product_brand
+        type: categorical
+
+  - name: sellers
+    description: "One row per unique seller"
+    model: ref('dim_seller')
+    entities:
+      - name: seller
+        type: primary
+        expr: seller_sk
+    dimensions:
+      - name: seller_name
+        type: categorical
+        expr: product_seller
+      - name: is_talabat
+        type: categorical
+        expr: product_is_talabat_seller
+
+metrics:
+  - name: average_product_price
+    label: "Average Product Price (EGP)"
+    description: "Mean current listed price across all scraped products"
+    type: simple
+    type_params:
+      measure:
+        name: avg_current_price
+
+  - name: discount_rate
+    label: "Average Discount Rate (%)"
+    description: "Mean discount percentage across all listings"
+    type: simple
+    type_params:
+      measure:
+        name: avg_discount_percentage
+
+  - name: total_product_listings
+    label: "Total Product Listings"
+    description: "Total number of product price observations scraped"
+    type: simple
+    type_params:
+      measure:
+        name: total_listings
+
+  - name: in_stock_listings
+    label: "In-stock Listings"
+    description: "Total number of listings where product is available"
+    type: simple
+    type_params:
+      measure:
+        name: in_stock_count
+
+  - name: discounted_listings
+    label: "Discounted Listings"
+    description: "Total number of listings that have a discount applied"
+    type: simple
+    type_params:
+      measure:
+        name: discounted_count

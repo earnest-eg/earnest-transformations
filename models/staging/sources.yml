@@ -3,6 +3,7 @@ version: 2
 sources:
   - name: raw_data
     schema: PUBLIC
+    database: DEPI_DB 
     tables:
       - name: STG_ALL_SELLERS_PRODUCTS
         description: "Transformed e-commerce product data from multiple online sellers."
