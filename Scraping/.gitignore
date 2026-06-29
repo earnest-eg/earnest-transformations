@@ -1,0 +1,31 @@
+# Generated scraper data
+data/
+output/
+outputs/
+cache/
+*.csv
+!scrapers/**/sample_data.csv
+*.json
+!package.json
+*.zip
+*.rar
+*.html
+*.log
+*.tmp
+*.bak
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Node
+node_modules/
+
+# Browser artifacts and secrets
+playwright-report/
+test-results/
+.env
+.env.*
+!.env.example
